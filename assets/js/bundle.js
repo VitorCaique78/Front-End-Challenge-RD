@@ -1,8 +1,8 @@
 (() => {
-    const selector = selector => /* trecho omitido */
-    const create = element => /* trecho omitido */
+    const selector = selector => document.getElementById(selector);
+    const create = element => document.createElement(element); 
 
-    const app = selector('#app');
+    const app = selector('app');
 
     const Login = create('div');
     Login.classList.add('login');
@@ -15,7 +15,7 @@
 
     Form.onsubmit = async e => {
         e.preventDefault();
-        const [email, password] = /* trecho omitido */
+        const [email, password] = e.target 
 
         const {url} = await fakeAuthenticate(email.value, password.value);
 
@@ -27,58 +27,84 @@
 
     Form.oninput = e => {
         const [email, password, button] = e.target.parentElement.children;
-        (!email.validity.valid || !email.value || password.value.length <= 5) 
+        (!validateEmail(email.value) || !email.value || password.value.length <= 5) 
             ? button.setAttribute('disabled','disabled')
             : button.removeAttribute('disabled');
     };
+        
+    Form.setAttribute('method', 'post');
+    Form.setAttribute('action', 'onsubmit');
+    
+    let email = create('input');
+    email.setAttribute('type', 'text');
+    email.setAttribute('name', 'email');
+    email.setAttribute('placeholder', 'Entre com seu e-mail')
 
-    Form.innerHTML = /**
-    * bloco de código omitido
-    * monte o seu formulário
-    */
+    let password = create('input');
+    password.setAttribute('type', 'password');
+    password.setAttribute('name', 'password');
+    password.setAttribute('placeholder', 'Digite sua senha supersecreta')
 
+    let buttonSubmit = create('input');
+    buttonSubmit.setAttribute('type', 'submit');
+    buttonSubmit.setAttribute('disabled', '')
+
+    Form.appendChild(email);
+    Form.appendChild(password);
+    Form.appendChild(buttonSubmit);
+    
+    app.appendChild(Login);
     app.appendChild(Logo);
     Login.appendChild(Form);
+    
 
     async function fakeAuthenticate(email, password) {
 
-        /**
-         * bloco de código omitido
-         * aqui esperamos que você faça a requisição ao URL informado
-         */
-
+        const data = await fetch('http://www.mocky.io/v2/5dba690e3000008c00028eb6');
+              
         const fakeJwtToken = `${btoa(email+password)}.${btoa(data.url)}.${(new Date()).getTime()+300000}`;
-        /* trecho omitido */
 
+        if (fakeJwtToken) {
+            localStorage.setItem('token', fakeJwtToken)
+        }
         return data;
     }
 
     async function getDevelopersList(url) {
-        /**
-         * bloco de código omitido
-         * aqui esperamos que você faça a segunda requisição 
-         * para carregar a lista de desenvolvedores
-         */
+
+        const response = await fetch(url).then(res => res.json());
+        const data = await fetch(response.url).then(res => res.json())
+
+        return data;
     }
 
     function renderPageUsers(users) {
         app.classList.add('logged');
-        Login.style.display = /* trecho omitido */
+        Login.style.display = 'none' 
 
         const Ul = create('ul');
-        Ul.classList.add('container')
+        Ul.classList.add('container');
 
-        /**
-         * bloco de código omitido
-         * exiba a lista de desenvolvedores
-         */
+         const data = users.map(user => `
+            <li>
+                <img src="${user.avatar_url}" />
+            <p>${user.login}</p>
+            </li>`).join('');
 
-        app.appendChild(Ul)
+        app.appendChild(Ul);
+
+        document.querySelector('.container').innerHTML = data;
+
     }
 
-    // init
+    function validateEmail (email)  {
+        if(/^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$/.test(email)) 
+            return true
+    }
+
+    //init
     (async function(){
-        const rawToken = /* trecho omitido */
+        const rawToken = localStorage.getItem('token')
         const token = rawToken ? rawToken.split('.') : null
         if (!token || token[2] < (new Date()).getTime()) {
             localStorage.removeItem('token');
